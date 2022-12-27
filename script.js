@@ -64,21 +64,20 @@ const ACTIONS = {
 // Отображение котов
 const getCat = (cats) => `
 	  <div data-cat-id="${cats.id}" class="cat">
-				<img src="${cats.image}" class="cat__img" alt="">
+			<img src="${cats.image}" class="cat__img" alt="">
 				<div class="cat__cards">
 					<h5 class="cat__title">${cats.name}</h5>
 					<p class="cat__text">${cats.description}</p>
 					<button data-action="${ACTIONS.DETAIL}" type="button" class="cat__btn-one">Detail</button>
 					<button data-openInfo="infoCat" data-action="${ACTIONS.DELETE}" type="button" class="cat__btn-two">Delete</button>
 				</div>
-			</div>
+		</div>
 	`;
 
 fetch("https://cats.petiteweb.dev/api/single/olesya-trubnikova-frontend/show/")
-.then((res) => res.json())
-.then((data) => {
-	
-	cat.insertAdjacentHTML("afterbegin", data.map(cats => getCat(cats)).join(""))
+	.then((res) => res.json())
+	.then((data) => {
+		cat.insertAdjacentHTML("afterbegin", data.map(cats => getCat(cats)).join(""))
 })
 
 
@@ -88,8 +87,6 @@ cat.addEventListener("click", (e) => {
 
 		const catWr = e.target.closest("[data-cat-id]")
 		const catId = catWr.dataset.catId
-
-		console.log({catId})
 
 		fetch(`https://cats.petiteweb.dev/api/single/olesya-trubnikova-frontend/delete/${catId}`, 
 		{method: "DELETE"})
@@ -112,66 +109,71 @@ const formatCreateFormData = (formDataObj) => ({
   favorite: !!formDataObj.favorite,
 });
 
-const submitCreateCatHandler = (e) => {
-	e.preventDefault();
-
-let formDataObj = formatCreateFormData(Object.fromEntries(new FormData(e.target).entries()));
-
-      fetch(
-        "https://cats.petiteweb.dev/api/single/olesya-trubnikova-frontend/add/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formDataObj),
-        }
-      )
-        .then((res) => {
-          if (res.status === 200) {
-            return cat.innerAdjacentHTML("afterbegin", getCat(formDataObj));
-          }
-          throw Error("Ошибка при создании кота");
-        })
-        .catch(alert);
-    }
-
+// Закрытие модального окна по фону
 const clickModalWrHandler = (e) => {
 	if(e.target === $modalWr) {
 		$modalWr.classList.add("hidden");
 		$modalWr.removeEventListener("click", clickModalWrHandler);
+		$modalContent.innerHTML = "";
 	}
 }
 
+const submitCreateCatHandler = (e) => {
+  e.preventDefault();
+
+  let formDataObj = formatCreateFormData(
+    Object.fromEntries(new FormData(e.target).entries())
+  );
+
+  fetch(
+    "https://cats.petiteweb.dev/api/single/olesya-trubnikova-frontend/add/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formDataObj),
+    }
+  )
+    .then((res) => {
+      if (res.status === 200) {
+        return cat.innerAdjacentHTML("afterbegin", getCat(formDataObj));
+      }
+      throw Error("Ошибка при создании кота");
+    })
+    .catch(alert);
+};
 const openModalHandler = (e) => {
-	const targetModelName = e.target.dataset.openmodal;
+  const targetModelName = e.target.dataset.openmodal;
 
-	if (targetModelName === "createCat") {
-    $modalWr.classList.remove("hidden")
-		$modalWr.addEventListener("click", clickModalWrHandler)
-		$modalContent.insertAdjacentHTML("afterbegin", getCreateCatFormHTML())
-		
-		const createCatForm = document.forms.createCatForm;
+  if (targetModelName === "createCat") {
+    $modalWr.classList.remove("hidden");
+    $modalWr.addEventListener("click", clickModalWrHandler);
+    $modalContent.insertAdjacentHTML("afterbegin", getCreateCatFormHTML());
 
-		const fromDataLS = localStorage.getItem(CREATE_FORM_LS_KEY);
+    const createCatForm = document.forms.createCatForm;
 
-		const preparedDataFromLS = fromDataLS && JSON.parse(fromDataLS);
-		
-		if(preparedDataFromLS) {
-			Object.keys(preparedDataFromLS).forEach((key) => {
-				createCatForm[key].value = preparedDataFromLS[key]
-			})
-		}
+    const fromDataLS = localStorage.getItem(CREATE_FORM_LS_KEY);
 
-		createCatForm.addEventListener("click", submitCreateCatHandler)
-		createCatForm.addEventListener("change", (changeEvent) => {
-		const formatData = formatCreateFormData(Object.fromEntries
-			(new FormData(createCatForm).entries()));
+    const preparedDataFromLS = fromDataLS && JSON.parse(fromDataLS);
 
-			localStorage.setItem(CREATE_FORM_LS_KEY, JSON.stringify(formatData));
-		})
+    if (preparedDataFromLS) {
+      Object.keys(preparedDataFromLS).forEach((key) => {
+        createCatForm[key].value = preparedDataFromLS[key];
+      });
+    }
+
+    createCatForm.addEventListener("click", submitCreateCatHandler);
+    createCatForm.addEventListener("change", (changeEvent) => {
+      const formatData = formatCreateFormData(
+        Object.fromEntries(new FormData(createCatForm).entries())
+      );
+
+      localStorage.setItem(CREATE_FORM_LS_KEY, JSON.stringify(formatData));
+    });
   }
-}
+};
+
 
 
 // Модальное окно с инфой кота
@@ -182,21 +184,25 @@ const infoModalCat = (e) => {
 
 		const catWr = e.target.closest("[data-cat-id]");
     const catId = catWr.dataset.catId;
+
 		fetch(`https://cats.petiteweb.dev/api/single/olesya-trubnikova-frontend/show/${catId}`)
 		.then((res) => res.json())
 		.then((data) => {
 			$infoContent.insertAdjacentHTML(
         "afterbegin",
+
         `
-				<button type="button" class="btn__close">x</button>
-				<br>
-				<img class="info__img" src="${data.image}" alt="">
-	       <p data-cat-id="${cat.id}" class="info__id">Id: ${data.id}</p>
-         <p class="info__name">Имя: ${data.name}</p>
-		     <p class="info__age" contentEditable="true">Возраст: ${data.age}</p>
-		     <p class="info__text" contentEditable="true">Описание: ${data.description}</p>
-		     <p class="info__rate" contentEditable="true">Рейтинг: ${data.rate}</p>
-	   	   <button data-action="${ACTIONS.EDIT}" type="button"   	class="info__btn">Edit</button>
+				<div data-cat-id="${data.id}">
+					<button type="button" class="btn__close">x</button>
+					<br>
+					<img class="info__img" src="${data.image}" alt="">
+					<p class="info__id">Id: ${data.id}</p>
+					<p data-cat-name class="info__name">Имя: ${data.name}</p>
+					<p class="info__age" contentEditable="true">Возраст: ${data.age}</p>
+					<p class="info__text" contentEditable="true">Описание: ${data.description}</p>
+					<p class="info__rate" contentEditable="true">Рейтинг: ${data.rate}</p>
+					<button data-action="${ACTIONS.EDIT}" type="button" class="info__btn">Edit</button>
+				</div>
 				`
       );
 		})
@@ -204,47 +210,48 @@ const infoModalCat = (e) => {
 };
 
 
-// Редактирование информации о коте
-const infoCat = document.querySelector(".info__cat");
+
+// Редактирование информации о коте (внутри модального окна с инфой через contentEditable)
+// Что-то пошло не так)
+const infoCat = document.querySelector(".info__cat")
+
 infoCat.addEventListener("click", (e) => {
-  if (e.target.dataset.action === ACTIONS.EDIT) {
+	if (e.target.dataset.action === ACTIONS.EDIT) {
 
-		const catAge = document.querySelector(".info__age");
-    const catText = document.querySelector(".info__text");
-    const catRate = document.querySelector(".info__rate");
+	const catWr = e.target.closest("[data-cat-id]");
+	const catId = catWr.dataset.catId;
 
-		const dataCat = {
-      AGE: catAge.innerHTML,
-      TEXT: catText.innerHTML,
-      RATE: catRate.innerHTML,
-    };
+	const catAge = document.querySelector(".info__age");
+  const catText = document.querySelector(".info__text");
+  const catRate = document.querySelector(".info__rate");
 
-		console.log(dataCat.AGE);
-    console.log(dataCat.TEXT);
-    console.log(dataCat.RATE);
+  const dataCat = {
+    AGE: catAge.innerHTML,
+    TEXT: catText.innerHTML,
+    RATE: catRate.innerHTML,
+  };
+	console.log(dataCat);
 
-		const catWr = e.target.closest("[data-cat-id]");
-    const catId = catWr.dataset.catId;
+	fetch(
+    `https://cats.petiteweb.dev/api/single/olesya-trubnikova-frontend/update/${catId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify,
+    }
+  )
+    .then((res) => {
+      if (res.status === 200) {
+        return
+      }
+      throw Error(`Ошибка при редактировании кота с id = ${catId}`);
+    })
+    .catch(alert);
 
-    console.log({ catId })
-
-		fetch(
-      `https://cats.petiteweb.dev/api/single/olesya-trubnikova-frontend/show/${catId}`,
-        { method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(),
-        }
-      )
-        .then((res) => {
-          if (res.status === 200) {
-            return cat.innerAdjacentHTML("afterbegin", getCat(formDataObj));
-          }
-          throw Error("Ошибка при редактировании кота с id = ${catId}");
-        })
-        .catch(alert);
-			}
+		localStorage.setItem(CREATE_FORM_LS_KEY, JSON.stringify);
+	}
 })
 
 

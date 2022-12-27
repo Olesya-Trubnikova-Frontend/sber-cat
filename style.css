@@ -144,6 +144,18 @@ body{
 	height: 230px;
 }
 
+.info__age:focus {
+	color:rgb(194, 153, 20);
+}
+
+.info__text:focus {
+	color:rgb(194, 153, 20);
+}
+
+.info__rate:focus {
+	color:rgb(194, 153, 20);
+}
+
 .info__btn {
 	width: 70px;
 	height: 35px;
